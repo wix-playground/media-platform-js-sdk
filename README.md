@@ -589,3 +589,6 @@ It offers computing, storage and application services for web, mobile and backen
 [npm-url]: https://npmjs.org/package/media-platform-js-sdk
 [npm-image]: https://img.shields.io/npm/v/media-platform-js-sdk.svg
 [downloads-image]: https://img.shields.io/npm/dm/media-platform-js-sdk.svg
+
+
+1.x
