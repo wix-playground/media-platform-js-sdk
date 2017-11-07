@@ -19,16 +19,16 @@
         <url>scm:git:ssh://git@github.com:wix/media-platform-js-sdk.git</url>
     </scm>
 
-    <developers>
+     <developers>
         <developer>
-            <name>Elad Laufer</name>
-            <email>elad@wix.com</email>
+            <name>Alon Neubach</name>
+            <email>alonne@wix.com</email>
             <roles>
                 <role>owner</role>
-                <role>developer</role>
             </roles>
         </developer>
     </developers>
+
 
     <parent>
         <groupId>com.wixpress.common</groupId>
