@@ -12,6 +12,16 @@ function UploadUrlRequest() {
      * @type {string}
      */
     this.path = null;
+
+    /**
+     * @type {number|null}
+     */
+    this.size = null;
+
+    /**
+     * @type {string}
+     */
+    this.acl = 'public';
 }
 
 /**
@@ -29,6 +39,25 @@ UploadUrlRequest.prototype.setMimeType = function (mimeType) {
  */
 UploadUrlRequest.prototype.setPath = function (path) {
     this.path = path;
+    return this;
+};
+
+/**
+ * @description Optional file size in bytes. Required for file size enforcement
+ * @param {number} size
+ * @returns {UploadUrlRequest}
+ */
+UploadUrlRequest.prototype.setSize = function (size) {
+    this.size = size;
+    return this;
+};
+
+/**
+ * @param {string} acl
+ * @returns {UploadUrlRequest}
+ */
+UploadUrlRequest.prototype.setAcl = function (acl) {
+    this.acl = acl;
     return this;
 };
 

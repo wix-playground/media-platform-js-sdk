@@ -56,14 +56,22 @@ FileUploader.prototype.uploadFile = function (path, file, uploadRequest, callbac
 
     var calledBack = false;
     var stream = null;
+    var size = null;
 
     if (typeof file.pipe === 'function') {
         stream = file;
         stream.once('error', doCallback);
     } else if (typeof file === 'string') {
+        try {
+            size = fs.statSync(file).size;
+        } catch (error) {
+            doCallback(error, null);
+        }
         stream = fs.createReadStream(file);
         stream.once('error', doCallback);
     } else if (file instanceof Buffer) {
+        // noinspection JSUnresolvedVariable
+        size = file.byteLength;
         stream = {
             value: file,
             options: {
@@ -79,7 +87,11 @@ FileUploader.prototype.uploadFile = function (path, file, uploadRequest, callbac
     if (uploadRequest) {
         uploadUrlRequest = new UploadUrlRequest()
             .setMimeType(uploadRequest.mimeType)
-            .setPath(path);
+            .setPath(path)
+            .setAcl(uploadRequest.acl);
+        if (size) {
+            uploadUrlRequest.setSize(size);
+        }
     }
 
     this.getUploadUrl(uploadUrlRequest, function (error, response) {

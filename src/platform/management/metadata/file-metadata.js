@@ -11,17 +11,17 @@ var VideoPosters = require('./video-posters');
 function FileMetadata(data) {
 
     /**
-     * @type {string}
+     * @type {FileDescriptor}
      */
     this.fileDescriptor = null;
 
     /**
-     * @type {string}
+     * @type {Object}
      */
     this.basic = null;
 
     /**
-     * @type {ImageFeatures}
+     * @type {Object}
      */
     this.features = null;
 

@@ -4,6 +4,9 @@ var parseFileMetadata = require('./parser/file-metadata-parser');
 var FileDescriptor = require('../platform/management/metadata/file-descriptor');
 var FileMetadata = require('../platform/management/metadata/file-metadata');
 var Crop = require('./framing/crop');
+var SmartCrop = require('./framing/smartcrop');
+var Fill = require('./framing/fill');
+var Fit = require('./framing/fit');
 var Rectangle = require('../geometry/rectangle');
 var Dimension = require('../geometry/dimension');
 var UnsharpMask = require('./filter/unsharp-mask');
@@ -13,7 +16,6 @@ var Contrast = require('./filter/contrast');
 var Hue = require('./filter/hue');
 var Saturation = require('./filter/saturation');
 var JPEG = require('./encoder/jpeg');
-var validator = require('./validation/validator');
 
 /**
  * @description a configurable object that supports all the operations, filters and adjustments supported by Wix Media Platform
@@ -158,12 +160,12 @@ Image.prototype.scaleToHeight = function (height, regionOfInterest) {
  * @returns {Image}
  */
 Image.prototype.fillContainer = function (container, regionOfInterest) {
-    if (!regionOfInterest) {
-        regionOfInterest = new Rectangle(this.metadata.width, this.metadata.height, 0, 0);
-    }
-
     if (!this.metadata) {
         throw new Error('client side manipulation requires image basic metadata');
+    }
+
+    if (!regionOfInterest) {
+        regionOfInterest = new Rectangle(this.metadata.width, this.metadata.height, 0, 0);
     }
 
     var roiAspectRatio = regionOfInterest.width / regionOfInterest.height;
@@ -220,16 +222,51 @@ Image.prototype.crop = function (width, height, x, y, scale) {
 };
 
 /**
+ * @summary Configures this image using the 'scrop' operation.
+ * @param {number} width
+ * @param {number} height
+ * @returns {Image}
+ */
+Image.prototype.smartCrop = function (width, height) {
+    this.geometry = new SmartCrop(width, height);
+    return this;
+};
+
+/**
+ * @summary Configures this image using the 'fill' operation.
+ * @param {number} width
+ * @param {number} height
+ * @returns {Image}
+ */
+Image.prototype.fill = function (width, height) {
+    this.geometry = new Fill(width, height);
+    return this;
+};
+
+/**
+ * @summary Configures this image using the 'fit' operation.
+ * @param {number} width
+ * @param {number} height
+ * @returns {Image}
+ */
+Image.prototype.fit = function (width, height) {
+    this.geometry = new Fit(width, height);
+    return this;
+};
+
+/**
  * @summary serializes the Image to the URL
  * @param {string?} host where the image is hosted, default to '//'
  * @returns {{url: string|null, error: Error|null}}
  */
 Image.prototype.toUrl = function (host) {
 
-    if (!this.geometry) {
+    var command = this.toCommand();
+
+    if (command.error) {
         return {
             url: null,
-            error: new Error('geometry not defined')
+            error: command.error
         };
     }
 
@@ -249,6 +286,29 @@ Image.prototype.toUrl = function (host) {
         path = path.slice(1);
     }
 
+    url += baseUrl + '/' + path + command.command + '/' + encodeURIComponent(this.fileName);
+    if (this.metadata) {
+        url += '#' + this.metadata.serialize();
+    }
+    return {
+        url: url,
+        error: null
+    }
+};
+
+/**
+ * @summary serializes the command part of the URL
+ * @returns {{command: string|null, error: Error|null}}
+ */
+Image.prototype.toCommand = function () {
+
+    if (!this.geometry) {
+        return {
+            url: null,
+            error: new Error('geometry not defined')
+        };
+    }
+
     var geometryParams = this.geometry.serialize();
     if (geometryParams.error) {
         return {
@@ -264,13 +324,10 @@ Image.prototype.toUrl = function (host) {
             error: new Error(filtersAndEncoderParams.errors)
         }
     }
-    url += baseUrl + '/' + path + '/' + this.version + '/';
-    url += geometryParams.params + filtersAndEncoderParams.params + '/' + encodeURIComponent(this.fileName);
-    if (this.metadata) {
-        url += '#' + this.metadata.serialize();
-    }
+    var command = '/' + this.version + '/' + geometryParams.params + filtersAndEncoderParams.params;
+
     return {
-        url: url,
+        command: command,
         error: null
     }
 };

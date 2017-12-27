@@ -344,6 +344,15 @@ describe('image url construction', function () {
                 error: null
             });
         });
+
+        it('scale to width - missing image basic data', function () {
+            var image = new Image('//fish.com/1234/5678/file.png/v1/crop/w_709,h_400/file.png');
+            try {
+                image.scaleToWidth(1000).toUrl();
+            } catch (e) {
+                expect(e.message).to.equal('client side manipulation requires image basic metadata')
+            }
+        });
     });
 
     describe('crop geometry', function () {
@@ -438,6 +447,166 @@ describe('image url construction', function () {
                 url: '//test.com/1111/images/324234/v1/crop/w_101,h_102,x_81,y_82,scl_1.2,blur_10,br_99,con_12,hue_60,q_100,bl,sat_-70,usm_10.00_8.00_9.00/324234#w_1000,h_2000,mt_image%2Fpng',
                 //    //test.com/1111/images/324234/v1/crop/w_101,h_102,x_81,y_82,scl_1.2,blur_10,br_99,con_12,hue_60,q_100,bl,sat_-70,usm_10.00_8.00_9.00/324234#w_1000,h_2000,mt_image%2Fpng
                 error: null
+            });
+        });
+    });
+
+    describe('smart crop geometry', function () {
+
+        var image = new Image(imageUrl);
+
+        it('all options', function () {
+            var result = image.smartCrop(101, 102)
+                .jpeg(100, true)
+                .unsharpMask(10, 8, 9)
+                .blur(10)
+                .saturation(-70)
+                .hue(60)
+                .contrast(12)
+                .brightness(99)
+                .toUrl();
+
+            expect(result).to.eql({
+                url: '//test.com/1111/images/324234/v1/scrop/w_101,h_102,blur_10,br_99,con_12,hue_60,q_100,bl,sat_-70,usm_10.00_8.00_9.00/324234#w_1000,h_2000,mt_image%2Fpng',
+                error: null
+            });
+        });
+    });
+
+    describe('fill geometry', function () {
+
+        var image = new Image(imageUrl);
+
+        it('fill', function () {
+
+            var fill = image.fill(90, 91);
+
+            expect(fill.toUrl()).to.eql({
+                url: '//test.com/1111/images/324234/v1/fill/w_90,h_91,usm_0.50_0.20_0.00/324234#w_1000,h_2000,mt_image%2Fpng',
+                error: null
+            });
+        });
+
+        it('rounds w values down', function () {
+            var fill = image.fill(90.2, 91);
+
+            expect(fill.toUrl()).to.eql({
+                url: '//test.com/1111/images/324234/v1/fill/w_90,h_91,usm_0.50_0.20_0.00/324234#w_1000,h_2000,mt_image%2Fpng',
+                error: null
+            });
+        });
+
+        it('rounds w values up', function () {
+            var fill = image.fill(89.8, 91);
+
+            expect(fill.toUrl()).to.eql({
+                url: '//test.com/1111/images/324234/v1/fill/w_90,h_91,usm_0.50_0.20_0.00/324234#w_1000,h_2000,mt_image%2Fpng',
+                error: null
+            });
+        });
+
+        it('rounds h values down', function () {
+            var fill = image.fill(90, 91.2);
+
+            expect(fill.toUrl()).to.eql({
+                url: '//test.com/1111/images/324234/v1/fill/w_90,h_91,usm_0.50_0.20_0.00/324234#w_1000,h_2000,mt_image%2Fpng',
+                error: null
+            });
+        });
+
+        it('rounds h values up', function () {
+            var fill = image.fill(90, 90.9);
+
+            expect(fill.toUrl()).to.eql({
+                url: '//test.com/1111/images/324234/v1/fill/w_90,h_91,usm_0.50_0.20_0.00/324234#w_1000,h_2000,mt_image%2Fpng',
+                error: null
+            });
+        });
+
+        it('reject w values smaller than 1', function () {
+            var fill = image.fill(0, 91);
+
+            expect(fill.toUrl()).to.eql({
+                url: null,
+                error: new Error('fill x: -1 is not a number greater than 0')
+            });
+        });
+
+        it('reject h values smaller than 1', function () {
+            var fill = image.fill(90, 0);
+
+            expect(fill.toUrl()).to.eql({
+                url: null,
+                error: new Error('fill y: -1 is not a number greater than 0')
+            });
+        });
+    });
+
+    describe('fit geometry', function () {
+
+        var image = new Image(imageUrl);
+
+        it('fit', function () {
+
+            var fit = image.fit(90, 91);
+
+            expect(fit.toUrl()).to.eql({
+                url: '//test.com/1111/images/324234/v1/fit/w_90,h_91,usm_0.50_0.20_0.00/324234#w_1000,h_2000,mt_image%2Fpng',
+                error: null
+            });
+        });
+
+        it('rounds w values down', function () {
+            var fit = image.fit(90.2, 91);
+
+            expect(fit.toUrl()).to.eql({
+                url: '//test.com/1111/images/324234/v1/fit/w_90,h_91,usm_0.50_0.20_0.00/324234#w_1000,h_2000,mt_image%2Fpng',
+                error: null
+            });
+        });
+
+        it('rounds w values up', function () {
+            var fit = image.fit(89.8, 91);
+
+            expect(fit.toUrl()).to.eql({
+                url: '//test.com/1111/images/324234/v1/fit/w_90,h_91,usm_0.50_0.20_0.00/324234#w_1000,h_2000,mt_image%2Fpng',
+                error: null
+            });
+        });
+
+        it('rounds h values down', function () {
+            var fit = image.fit(90, 91.2);
+
+            expect(fit.toUrl()).to.eql({
+                url: '//test.com/1111/images/324234/v1/fit/w_90,h_91,usm_0.50_0.20_0.00/324234#w_1000,h_2000,mt_image%2Fpng',
+                error: null
+            });
+        });
+
+        it('rounds h values up', function () {
+            var fit = image.fit(90, 90.9);
+
+            expect(fit.toUrl()).to.eql({
+                url: '//test.com/1111/images/324234/v1/fit/w_90,h_91,usm_0.50_0.20_0.00/324234#w_1000,h_2000,mt_image%2Fpng',
+                error: null
+            });
+        });
+
+        it('reject w values smaller than 1', function () {
+            var fit = image.fit(0, 91);
+
+            expect(fit.toUrl()).to.eql({
+                url: null,
+                error: new Error('fit x: -1 is not a number greater than 0')
+            });
+        });
+
+        it('reject h values smaller than 1', function () {
+            var fit = image.fit(90, 0);
+
+            expect(fit.toUrl()).to.eql({
+                url: null,
+                error: new Error('fit y: -1 is not a number greater than 0')
             });
         });
     });
